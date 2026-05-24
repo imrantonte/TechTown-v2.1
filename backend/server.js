@@ -38,6 +38,9 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ message: 'TechTown API is running securely!' });
 });
 
+// Auth routes (for registration, login, logout)
+app.use('/api/auth', require('./routes/authRoutes'));
+
 // --- SERVER STARTUP ---
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
