@@ -9,7 +9,7 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const { user, isLoading: isAuthLoading } = useAuthStore();
     const fetchProducts = useProductStore(state => state.fetchProducts);
-    
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [imageFile, setImageFile] = useState(null);
 
@@ -24,9 +24,15 @@ const Dashboard = () => {
 
     // SECURITY: Redirect users who are not logged in
     useEffect(() => {
-        if (!isAuthLoading && !user) {
-            toast.error("You must be logged in to access the dashboard");
-            navigate('/login');
+        if (!isAuthLoading) {
+            if (!user) {
+                toast.error("You must be logged in to access the dashboard");
+                navigate('/login');
+            } else if (user.role !== 'admin' && user.role !== 'seller') {
+                // If they are just a standard customer, kick them out
+                toast.error("Access denied. Seller Dashboard is restricted.");
+                navigate('/');
+            }
         }
     }, [user, isAuthLoading, navigate]);
 
@@ -40,7 +46,7 @@ const Dashboard = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!imageFile) {
             return toast.error("Please select an image for the product");
         }
@@ -60,23 +66,30 @@ const Dashboard = () => {
             await axios.post('/api/products', uploadData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            
+
             toast.success("Product successfully added to the store!");
-            
+
             // Reset the form
             setFormData({ name: '', category: 'Smartphones', price: '', stock: '', condition_type: 'New' });
             setImageFile(null);
             document.getElementById('imageInput').value = ''; // Clear file input UI
-            
+
             // Tell Zustand to refresh the global product list so it appears on the home page instantly
             fetchProducts();
-            
+
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to upload product");
         } finally {
             setIsSubmitting(false);
         }
     };
+
+    // Show nothing while checking authentication or if they don't have access to prevent UI flashing
+    if (isAuthLoading || !user || (user.role !== 'admin' && user.role !== 'seller')) return null;
+
+    return (
+        <section className="admin-body"></section>
+    );
 
     // Show nothing while checking authentication to prevent UI flashing
     if (isAuthLoading || !user) return null;
@@ -97,7 +110,7 @@ const Dashboard = () => {
                     </h3>
 
                     <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                        
+
                         {/* Name */}
                         <div style={{ gridColumn: 'span 2' }}>
                             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Product Name</label>
@@ -146,8 +159,8 @@ const Dashboard = () => {
 
                         {/* Submit Button */}
                         <div style={{ gridColumn: 'span 2' }}>
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 disabled={isSubmitting}
                                 style={{ width: '100%', padding: '15px', background: 'var(--primary-orange, #f57224)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}
                             >

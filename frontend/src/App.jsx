@@ -11,9 +11,12 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Cart from './pages/Cart';
 import Login from './pages/Login';
+import Profile from './pages/Profile';
 import Products from './pages/Products';
 import Register from './pages/Register';
+import Checkout from './pages/Checkout';
 import Dashboard from './pages/Dashboard';
+import ProductDetails from './pages/ProductDetails';
 
 // Global Store
 import { useAuthStore } from './store/authStore';
@@ -35,9 +38,12 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/products" element={<Products />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
         </Routes>
       </main>
 

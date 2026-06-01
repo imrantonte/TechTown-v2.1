@@ -14,7 +14,7 @@ const productSchema = new mongoose.Schema({
     category: {
         type: String,
         required: [true, 'Please select a category'],
-        enum: ['Smartphones', 'Laptops', 'Gadgets', 'Accessories'] // Based on SRS
+        enum: ['Smartphones', 'Laptops', 'Gadgets', 'Accessories', 'Cameras', 'Smart Watches']
     },
     price: {
         type: Number,

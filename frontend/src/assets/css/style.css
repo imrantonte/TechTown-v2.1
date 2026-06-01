@@ -513,7 +513,7 @@ footer {
     transition: 0.2s;
     appearance: none;
     padding-right: 40px;
-    background: white url("../images/down-arrow.svg") no-repeat right 10px center;
+    background: white url("/assets/images/down-arrow.svg") no-repeat right 10px center;
     background-size: 16px;
 }
 

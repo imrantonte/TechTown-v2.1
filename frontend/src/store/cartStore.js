@@ -36,6 +36,47 @@ export const useCartStore = create(
                 toast.success(`${product.name} added to cart!`);
             },
 
+            // Decrease quantity or remove if it hits 0
+            decreaseQuantity: (productId) => {
+                const cart = get().cart;
+                const existingItem = cart.find(item => item._id === productId);
+
+                if (existingItem?.quantity > 1) {
+                    set({
+                        cart: cart.map(item => 
+                            item._id === productId 
+                                ? { ...item, quantity: item.quantity - 1 } 
+                                : item
+                        )
+                    });
+                } else {
+                    // If quantity is 1 and they press '-', remove it completely
+                    set({ cart: cart.filter(item => item._id !== productId) });
+                }
+            },
+
+            updateQuantity: (productId, qty) => {
+                const cart = get().cart;
+                const existingItem = cart.find(item => item._id === productId);
+
+                if (existingItem) {
+                    if (qty > existingItem.stock) {
+                        toast.error(`Only ${existingItem.stock} items in stock!`);
+                        qty = existingItem.stock; 
+                    }
+                    
+                    if (qty < 1) qty = 1;
+
+                    set({
+                        cart: cart.map(item => 
+                            item._id === productId 
+                                ? { ...item, quantity: qty } 
+                                : item
+                        )
+                    });
+                }
+            },
+
             // Remove a specific item completely
             removeFromCart: (productId) => {
                 set({ cart: get().cart.filter(item => item._id !== productId) });

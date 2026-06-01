@@ -1,6 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { FaSearch, FaShoppingCart, FaUser, FaSignOutAlt, FaTachometerAlt } from 'react-icons/fa';
-import logo from '../assets/images/TechTown Logo1.png';
 
 // Import our new global stores
 import { useCartStore } from '../store/cartStore';
@@ -8,11 +7,10 @@ import { useAuthStore } from '../store/authStore';
 
 const Navbar = () => {
     const navigate = useNavigate();
-    
-    // Extract what we need from the stores
-    const getCartCount = useCartStore(state => state.getCartCount);
-    const cartCount = getCartCount();
-    
+
+    const cart = useCartStore(state => state.cart);
+    const cartCount = cart.reduce((total, item) => total + item.quantity, 0)
+
     const { user, logout } = useAuthStore();
 
     const handleLogout = async () => {
@@ -25,21 +23,21 @@ const Navbar = () => {
             <nav className="navbar">
                 <div className="logo">
                     <Link to="/">
-                        <img src={logo} alt="TechTown Logo" />
+                        <img src="/assets/images/TechTown Logo1.png" alt="TechTown Logo" />
                     </Link>
                 </div>
 
                 <div className="search-container">
                     <form style={{ display: 'flex', width: '100%', position: 'relative' }}>
-                        <input 
-                            type="text" 
-                            name="search" 
-                            className="search-bar" 
-                            placeholder="Search devices..." 
-                            autoComplete="off" 
+                        <input
+                            type="text"
+                            name="search"
+                            className="search-bar"
+                            placeholder="Search devices..."
+                            autoComplete="off"
                         />
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             style={{ background: 'none', border: 'none', position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: '#888' }}
                         >
                             <FaSearch />
@@ -60,13 +58,22 @@ const Navbar = () => {
                         </span>
                     </Link>
 
-                    {/* Conditional Rendering: Check if user is logged in */}
+                    {/* Conditional Rendering: Check if user is logged in AND check their role */}
                     {user ? (
                         <>
-                            <Link to="/dashboard" title="Dashboard">
-                                <FaTachometerAlt />
+                            {/* ALL logged-in users get the Profile icon */}
+                            <Link to="/profile" title="My Account" style={{ color: '#333', fontSize: '18px' }}>
+                                <FaUser />
                             </Link>
-                            <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#333', fontSize: '18px' }} title="Logout">
+
+                            {/* ONLY show Dashboard icon if they are an admin or seller */}
+                            {(user.role === 'admin' || user.role === 'seller') && (
+                                <Link to="/dashboard" title="Seller Dashboard" style={{ color: '#333', fontSize: '18px' }}>
+                                    <FaTachometerAlt />
+                                </Link>
+                            )}
+                            
+                            <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc3545', fontSize: '18px' }} title="Logout">
                                 <FaSignOutAlt />
                             </button>
                         </>
