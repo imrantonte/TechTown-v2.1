@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { FaSearch, FaShoppingCart, FaUser, FaSignOutAlt, FaTachometerAlt } from 'react-icons/fa';
+import { FaSearch, FaShoppingCart, FaUser, FaSignOutAlt } from 'react-icons/fa';
 
 // Import our new global stores
 import { useCartStore } from '../store/cartStore';
@@ -11,12 +11,7 @@ const Navbar = () => {
     const cart = useCartStore(state => state.cart);
     const cartCount = cart.reduce((total, item) => total + item.quantity, 0)
 
-    const { user, logout } = useAuthStore();
-
-    const handleLogout = async () => {
-        await logout();
-        navigate('/login');
-    };
+    const { user } = useAuthStore();
 
     return (
         <header>
@@ -58,25 +53,11 @@ const Navbar = () => {
                         </span>
                     </Link>
 
-                    {/* Conditional Rendering: Check if user is logged in AND check their role */}
+                    {/* Conditional Rendering: Check if user is logged in */}
                     {user ? (
-                        <>
-                            {/* ALL logged-in users get the Profile icon */}
-                            <Link to="/profile" title="My Account" style={{ color: '#333', fontSize: '18px' }}>
-                                <FaUser />
-                            </Link>
-
-                            {/* ONLY show Dashboard icon if they are an admin or seller */}
-                            {(user.role === 'admin' || user.role === 'seller') && (
-                                <Link to="/dashboard" title="Seller Dashboard" style={{ color: '#333', fontSize: '18px' }}>
-                                    <FaTachometerAlt />
-                                </Link>
-                            )}
-                            
-                            <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc3545', fontSize: '18px' }} title="Logout">
-                                <FaSignOutAlt />
-                            </button>
-                        </>
+                        <Link to="/profile" title="My Account" style={{ color: '#333', fontSize: '18px' }}>
+                            <FaUser />
+                        </Link>
                     ) : (
                         <Link to="/login" title="Login">
                             <FaUser />

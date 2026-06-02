@@ -3,40 +3,36 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { FaUserCircle, FaChartPie, FaBox, FaCog, FaSignOutAlt, FaTachometerAlt } from 'react-icons/fa'; // Added FaTachometerAlt
 
 const Profile = () => {
     const navigate = useNavigate();
     const { user, logout, checkAuth } = useAuthStore();
-
-    // Tab State ('overview', 'orders', 'settings')
+    
     const [activeTab, setActiveTab] = useState('overview');
-
-    // Data State
     const [orders, setOrders] = useState([]);
-    const [selectedReceipt, setSelectedReceipt] = useState(null); // For the receipt modal
+    const [selectedReceipt, setSelectedReceipt] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
-
-    // Form State for Settings
+    
     const [formData, setFormData] = useState({
         name: user?.name || '',
         phone: user?.phone || '',
-        address: user?.address || ''
+        address: user?.address || '',
+        password: '' 
     });
 
-    // SECURITY: Must be logged in
     useEffect(() => {
         if (!user) navigate('/login');
     }, [user, navigate]);
 
-    // Fetch User's Orders when the component loads
     useEffect(() => {
         const fetchMyOrders = async () => {
             try {
-                // Assuming standard REST pattern. We will build this backend route if it doesn't exist yet!
-                const res = await axios.get('/api/orders/myorders');
-                setOrders(res.data);
+                const res = await axios.get('/api/orders/myorders'); 
+                const sortedOrders = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                setOrders(sortedOrders);
             } catch (error) {
-                console.error("Could not fetch orders. Backend route may be missing.");
+                console.error("Could not fetch orders.");
             }
         };
         if (user) fetchMyOrders();
@@ -52,7 +48,8 @@ const Profile = () => {
         try {
             await axios.put('/api/users/profile', formData);
             toast.success("Profile updated successfully!");
-            checkAuth(); // Refresh global user state
+            setFormData({ ...formData, password: '' }); 
+            checkAuth(); 
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to update profile");
         } finally {
@@ -62,75 +59,114 @@ const Profile = () => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login');
+        navigate('/logged-out'); 
     };
 
     if (!user) return null;
 
+    // FIX 2: Only calculate Total Spent if the order is actually Delivered
+    const totalSpent = orders
+        .filter(order => order.status === 'Delivered')
+        .reduce((sum, order) => sum + (order.total_amount || 0), 0);
+
+    const lastOrder = orders.length > 0 ? orders[0] : null;
+
     return (
-        <section className="mt-60 mb-80" style={{ maxWidth: '1000px', margin: '60px auto', padding: '0 20px' }}>
-            <h2 style={{ marginBottom: '30px' }}>My Account</h2>
-
+        <section className="mt-60 mb-80" style={{ maxWidth: '1100px', margin: '60px auto', padding: '0 20px' }}>
             <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-
-                {/* LEFT SIDEBAR: Navigation Tabs */}
-                <div style={{ flex: '1 1 250px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    <div style={{ padding: '20px', background: '#f8f9fa', borderBottom: '1px solid #eee', textAlign: 'center' }}>
-                        <div style={{ width: '60px', height: '60px', background: 'var(--primary-orange, #f57224)', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold', margin: '0 auto 10px auto' }}>
-                            {user.name.charAt(0).toUpperCase()}
-                        </div>
-                        <h4 style={{ margin: 0 }}>{user.name}</h4>
-                        <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#777' }}>{user.email}</p>
+                
+                {/* LEFT SIDEBAR */}
+                <div style={{ flex: '1 1 250px', background: '#fff', borderRadius: '8px', border: '1px solid #eee', overflow: 'hidden' }}>
+                    <div style={{ padding: '30px 20px', textAlign: 'center', borderBottom: '1px solid #eee' }}>
+                        <FaUserCircle style={{ fontSize: '60px', color: '#ccc', marginBottom: '15px' }} />
+                        <h4 style={{ margin: 0, color: '#333', fontSize: '18px' }}>{user.name}</h4>
+                        <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#777' }}>{user.email}</p>
                     </div>
-
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                        <li
+                    
+                    {/* FIX 5: Removed margin on list and tabs to fix the gaps */}
+                    <ul style={{ listStyle: 'none', padding: '0', margin: 0 }}>
+                        <li 
+                            className="sidebar-tab"
                             onClick={() => { setActiveTab('overview'); setSelectedReceipt(null); }}
-                            style={{ padding: '15px 20px', cursor: 'pointer', borderBottom: '1px solid #eee', background: activeTab === 'overview' ? '#f1f1f1' : '#fff', fontWeight: activeTab === 'overview' ? 'bold' : 'normal', borderLeft: activeTab === 'overview' ? '4px solid var(--primary-orange, #f57224)' : '4px solid transparent' }}
-                        >Overview</li>
-                        <li
+                            style={{ padding: '15px 25px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '15px', fontWeight: activeTab === 'overview' ? 'bold' : 'normal', background: activeTab === 'overview' ? 'var(--primary-orange, #f57224)' : 'transparent', color: activeTab === 'overview' ? '#fff' : '#555', transition: 'all 0.2s', borderBottom: '1px solid #f9f9f9' }}
+                        >
+                            <FaChartPie style={{ pointerEvents: 'none' }} /> Overview
+                        </li>
+                        <li 
+                            className="sidebar-tab"
                             onClick={() => { setActiveTab('orders'); setSelectedReceipt(null); }}
-                            style={{ padding: '15px 20px', cursor: 'pointer', borderBottom: '1px solid #eee', background: activeTab === 'orders' ? '#f1f1f1' : '#fff', fontWeight: activeTab === 'orders' ? 'bold' : 'normal', borderLeft: activeTab === 'orders' ? '4px solid var(--primary-orange, #f57224)' : '4px solid transparent' }}
-                        >My Orders</li>
-                        <li
+                            style={{ padding: '15px 25px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '15px', fontWeight: activeTab === 'orders' ? 'bold' : 'normal', background: activeTab === 'orders' ? 'var(--primary-orange, #f57224)' : 'transparent', color: activeTab === 'orders' ? '#fff' : '#555', transition: 'all 0.2s', borderBottom: '1px solid #f9f9f9' }}
+                        >
+                            <FaBox style={{ pointerEvents: 'none' }} /> My Orders
+                        </li>
+                        <li 
+                            className="sidebar-tab"
                             onClick={() => { setActiveTab('settings'); setSelectedReceipt(null); }}
-                            style={{ padding: '15px 20px', cursor: 'pointer', borderBottom: '1px solid #eee', background: activeTab === 'settings' ? '#f1f1f1' : '#fff', fontWeight: activeTab === 'settings' ? 'bold' : 'normal', borderLeft: activeTab === 'settings' ? '4px solid var(--primary-orange, #f57224)' : '4px solid transparent' }}
-                        >Settings</li>
-                        <li
+                            style={{ padding: '15px 25px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '15px', fontWeight: activeTab === 'settings' ? 'bold' : 'normal', background: activeTab === 'settings' ? 'var(--primary-orange, #f57224)' : 'transparent', color: activeTab === 'settings' ? '#fff' : '#555', transition: 'all 0.2s', borderBottom: '1px solid #f9f9f9' }}
+                        >
+                            <FaCog style={{ pointerEvents: 'none' }} /> Settings
+                        </li>
+
+                        {/* FIX 4: Admin/Seller Dashboard link moved here, dynamically named */}
+                        {(user.role === 'admin' || user.role === 'seller') && (
+                            <li 
+                                className="sidebar-tab"
+                                onClick={() => navigate('/dashboard')}
+                                style={{ padding: '15px 25px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '15px', color: '#555', transition: 'all 0.2s', borderBottom: '1px solid #f9f9f9' }}
+                            >
+                                <FaTachometerAlt style={{ pointerEvents: 'none' }} /> {user.role === 'admin' ? 'Admin Dashboard' : 'Seller Dashboard'}
+                            </li>
+                        )}
+
+                        <li 
+                            className="sidebar-tab-logout"
                             onClick={handleLogout}
-                            style={{ padding: '15px 20px', cursor: 'pointer', color: '#dc3545' }}
-                        >Logout</li>
+                            style={{ padding: '15px 25px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '15px', color: '#ff4d4f', transition: 'all 0.2s' }}
+                        >
+                            <FaSignOutAlt style={{ pointerEvents: 'none' }} /> Logout
+                        </li>
                     </ul>
                 </div>
 
                 {/* RIGHT CONTENT AREA */}
-                <div style={{ flex: '1 1 600px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', padding: '30px', minHeight: '400px' }}>
-
+                <div style={{ flex: '1 1 700px', background: '#fff', borderRadius: '8px', border: '1px solid #eee', padding: '40px', minHeight: '500px' }}>
+                    
                     {/* --- TAB: OVERVIEW --- */}
                     {activeTab === 'overview' && (
                         <div>
-                            <h3 style={{ marginBottom: '20px', borderBottom: '2px solid #f4f6f9', paddingBottom: '10px' }}>Dashboard Overview</h3>
-                            <p style={{ fontSize: '18px', marginBottom: '20px' }}>Welcome back, <strong>{user.name}</strong>!</p>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-                                <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', textAlign: 'center', border: '1px solid #eee' }}>
-                                    <h4 style={{ margin: '0 0 10px 0', color: '#555' }}>Total Orders</h4>
-                                    <p style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, color: 'var(--primary-orange, #f57224)' }}>{orders.length}</p>
+                            <h3 style={{ marginBottom: '25px', color: '#333' }}>Overview</h3>
+                            
+                            <div style={{ display: 'flex', gap: '20px', marginBottom: '40px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: 1, minWidth: '150px', background: '#fcfcfc', padding: '30px', borderRadius: '8px', textAlign: 'center', border: '1px solid #eee' }}>
+                                    <p style={{ fontSize: '36px', fontWeight: 'bold', margin: '0 0 10px 0', color: 'var(--primary-orange, #f57224)' }}>{orders.length}</p>
+                                    <p style={{ color: '#555', margin: 0, fontSize: '14px' }}>Total Orders</p>
                                 </div>
-                                <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', textAlign: 'center', border: '1px solid #eee' }}>
-                                    <h4 style={{ margin: '0 0 10px 0', color: '#555' }}>Account Status</h4>
-                                    <p style={{ fontSize: '24px', fontWeight: 'bold', margin: 0, color: '#28a745' }}>Active</p>
+                                <div style={{ flex: 1, minWidth: '150px', background: '#fcfcfc', padding: '30px', borderRadius: '8px', textAlign: 'center', border: '1px solid #eee' }}>
+                                    <p style={{ fontSize: '36px', fontWeight: 'bold', margin: '0 0 10px 0', color: '#333' }}>৳ {totalSpent.toLocaleString()}</p>
+                                    <p style={{ color: '#555', margin: 0, fontSize: '14px' }}>Total Spent</p>
+                                </div>
+                                {/* FIX 1: Restored Active Status */}
+                                <div style={{ flex: 1, minWidth: '150px', background: '#fcfcfc', padding: '30px', borderRadius: '8px', textAlign: 'center', border: '1px solid #eee' }}>
+                                    <p style={{ fontSize: '36px', fontWeight: 'bold', margin: '0 0 10px 0', color: '#28a745' }}>Active</p>
+                                    <p style={{ color: '#555', margin: 0, fontSize: '14px' }}>Account Status</p>
                                 </div>
                             </div>
+
+                            <h4 style={{ marginBottom: '15px', color: '#333' }}>Recent Activity</h4>
+                            {lastOrder ? (
+                                <p style={{ color: '#555', fontSize: '16px' }}>
+                                    Your last order was on <strong>{new Date(lastOrder.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</strong> for <strong>৳ {lastOrder.total_amount?.toLocaleString() || 0}</strong>.
+                                </p>
+                            ) : (
+                                <p style={{ color: '#555', fontSize: '16px' }}>You have no recent activity.</p>
+                            )}
                         </div>
                     )}
 
                     {/* --- TAB: MY ORDERS --- */}
                     {activeTab === 'orders' && (
                         <div>
-                            <h3 style={{ marginBottom: '20px', borderBottom: '2px solid #f4f6f9', paddingBottom: '10px' }}>Order History</h3>
-
-                            {/* Receipt View (If a receipt is selected) */}
+                            <h3 style={{ marginBottom: '25px', color: '#333' }}>My Orders</h3>
                             {selectedReceipt ? (
                                 <div style={{ animation: 'fadeIn 0.3s' }}>
                                     <button onClick={() => setSelectedReceipt(null)} style={{ background: 'none', border: 'none', color: '#777', cursor: 'pointer', marginBottom: '15px', padding: 0 }}>&larr; Back to Orders</button>
@@ -141,12 +177,9 @@ const Profile = () => {
                                                 <p style={{ margin: 0, fontSize: '12px', color: '#777' }}>Placed on: {new Date(selectedReceipt.createdAt).toLocaleDateString()}</p>
                                             </div>
                                             <div style={{ textAlign: 'right' }}>
-                                                <span style={{ display: 'inline-block', padding: '5px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', background: selectedReceipt.status === 'Delivered' ? '#d4edda' : '#fff3cd', color: selectedReceipt.status === 'Delivered' ? '#155724' : '#856404' }}>
-                                                    {selectedReceipt.status}
-                                                </span>
+                                                <span style={{ display: 'inline-block', padding: '5px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', background: selectedReceipt.status === 'Delivered' ? '#d4edda' : '#fff3cd', color: selectedReceipt.status === 'Delivered' ? '#155724' : '#856404' }}>{selectedReceipt.status}</span>
                                             </div>
                                         </div>
-
                                         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
                                             <thead>
                                                 <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
@@ -156,7 +189,7 @@ const Profile = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {selectedReceipt.orderItems.map((item, idx) => (
+                                                {selectedReceipt.orderItems?.map((item, idx) => (
                                                     <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
                                                         <td style={{ padding: '10px 0' }}>{item.name}</td>
                                                         <td>{item.quantity}</td>
@@ -165,14 +198,12 @@ const Profile = () => {
                                                 ))}
                                             </tbody>
                                         </table>
-
                                         <div style={{ textAlign: 'right', fontSize: '18px', fontWeight: 'bold' }}>
-                                            Total Paid: ৳ {selectedReceipt.total_amount.toLocaleString()}
+                                            Total Paid: ৳ {selectedReceipt.total_amount?.toLocaleString() || 0}
                                         </div>
                                     </div>
                                 </div>
                             ) : (
-                                // Order List View
                                 orders.length === 0 ? (
                                     <p>You have not placed any orders yet.</p>
                                 ) : (
@@ -191,15 +222,10 @@ const Profile = () => {
                                                     <td style={{ padding: '15px 10px', fontWeight: 'bold' }}>#{order._id.substring(0, 8).toUpperCase()}</td>
                                                     <td style={{ padding: '15px 10px', color: '#777' }}>{new Date(order.createdAt).toLocaleDateString()}</td>
                                                     <td style={{ padding: '15px 10px' }}>
-                                                        <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', background: order.status === 'Delivered' ? '#d4edda' : '#fff3cd', color: order.status === 'Delivered' ? '#155724' : '#856404' }}>
-                                                            {order.status}
-                                                        </span>
+                                                        <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', background: order.status === 'Delivered' ? '#d4edda' : '#fff3cd', color: order.status === 'Delivered' ? '#155724' : '#856404' }}>{order.status}</span>
                                                     </td>
                                                     <td style={{ padding: '15px 10px', textAlign: 'center' }}>
-                                                        <button
-                                                            onClick={() => setSelectedReceipt(order)}
-                                                            style={{ background: '#343a40', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                                                        >View Receipt</button>
+                                                        <button onClick={() => setSelectedReceipt(order)} style={{ background: 'none', color: 'var(--primary-orange, #f57224)', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>View</button>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -213,33 +239,38 @@ const Profile = () => {
                     {/* --- TAB: SETTINGS --- */}
                     {activeTab === 'settings' && (
                         <div>
-                            <h3 style={{ marginBottom: '20px', borderBottom: '2px solid #f4f6f9', paddingBottom: '10px' }}>Account Settings</h3>
-                            <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '400px' }}>
-
+                            <h3 style={{ marginBottom: '25px', color: '#333' }}>Account Settings</h3>
+                            <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Full Name</label>
-                                    <input type="text" name="name" value={formData.name} onChange={handleInputChange} required style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' }}>Full Name</label>
+                                    <input type="text" name="name" value={formData.name} onChange={handleInputChange} required style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '14px' }} />
                                 </div>
 
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Phone Number</label>
-                                    <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} required style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' }}>Phone Number</label>
+                                    <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} required style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '14px' }} />
                                 </div>
 
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Shipping Address</label>
-                                    <textarea name="address" value={formData.address} onChange={handleInputChange} rows="3" placeholder="Enter your default delivery address" style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' }}>Shipping Address</label>
+                                    <textarea name="address" value={formData.address} onChange={handleInputChange} rows="3" style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '14px', resize: 'vertical' }} />
                                 </div>
 
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#888' }}>Email Address (Cannot be changed)</label>
-                                    <input type="email" value={user.email} disabled style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', background: '#f1f1f1', color: '#888' }} />
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' }}>Email Address</label>
+                                    <input type="email" value={user.email} disabled style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '4px', background: '#f9f9f9', color: '#888', cursor: 'not-allowed', fontSize: '14px' }} />
                                 </div>
 
-                                <button
-                                    type="submit"
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555' }}>New Password <span style={{ fontWeight: 'normal', color: '#888' }}>(Leave blank to keep current)</span></label>
+                                    <input type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="********" style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '14px' }} />
+                                </div>
+
+                                <button 
+                                    type="submit" 
                                     disabled={isUpdating}
-                                    style={{ padding: '12px', background: 'var(--primary-orange, #f57224)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px' }}
+                                    style={{ padding: '15px', background: 'var(--primary-orange, #f57224)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', marginTop: '10px' }}
                                 >
                                     {isUpdating ? 'Saving...' : 'Save Changes'}
                                 </button>

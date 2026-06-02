@@ -1219,3 +1219,26 @@ footer {
 .btn-delete { background: #dc3545; }
 .btn-deliver:hover { background: #218838; }
 .btn-delete:hover { background: #c82333; }
+
+/* Profile Sidebar Hover Effects */
+.sidebar-tab:hover {
+    background-color: #fff4ed !important;
+    color: var(--primary-orange) !important;
+}
+.sidebar-tab-logout:hover {
+    background-color: #fff0f0 !important;
+    color: #d93025 !important;
+}
+
+/* Auth Form Input Focus State */
+.auth-input:focus {
+    outline: none !important;
+    border-color: var(--primary-orange, #f57224) !important;
+    box-shadow: 0 0 0 2px rgba(245, 114, 36, 0.1) !important;
+    transition: all 0.3s ease;
+}
+
+.auth-btn:hover {
+    background-color: #e0601b !important;
+    transition: all 0.3s ease;
+}

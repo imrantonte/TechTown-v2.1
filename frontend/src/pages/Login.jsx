@@ -1,82 +1,89 @@
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import axios from 'axios';
-import { toast } from 'react-toastify';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-
-// 1. Define our validation rules using Zod
-const loginSchema = z.object({
-    email: z.string().email({ message: "Please enter a valid email address" }),
-    password: z.string().min(6, { message: "Password must be at least 6 characters" })
-});
+import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const Login = () => {
     const navigate = useNavigate();
+    // FIX: Bring in setUser instead of the non-existent login function
     const setUser = useAuthStore(state => state.setUser);
 
-    // 2. Initialize React Hook Form
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
-        resolver: zodResolver(loginSchema)
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
     });
 
-    // 3. Handle the actual API call
-    const onSubmit = async (data) => {
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         try {
-            const res = await axios.post('/api/auth/login', data);
+            // FIX: Make the API call directly here
+            const res = await axios.post('/api/auth/login', formData);
             
-            // Save user to global state
+            // Save the user to global state
             setUser(res.data);
-            toast.success(`Welcome back, ${res.data.name}!`);
             
-            // Redirect to the home page (or dashboard)
-            navigate('/');
+            toast.success("Welcome back!");
+            navigate('/profile'); // Redirects to your new awesome profile page
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Invalid email or password');
+            toast.error(error.response?.data?.message || "Invalid credentials");
         }
     };
 
     return (
-        <section className="mt-60 mb-80 flex-center">
-            <div style={{ maxWidth: '400px', width: '100%', padding: '30px', background: '#fff', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
-                <h2 className="text-center mb-80" style={{ marginBottom: '20px' }}>Sign In</h2>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', backgroundColor: '#f4f6f9', padding: '20px' }}>
+            <div style={{ background: '#fff', padding: '40px', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
                 
-                <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Email Address</label>
+                <h2 style={{ color: '#333', marginBottom: '10px', fontSize: '28px' }}>Welcome Back</h2>
+                <p style={{ color: '#777', marginBottom: '30px', fontSize: '15px' }}>Login to continue</p>
+
+                <form onSubmit={handleSubmit}>
+                    <div style={{ textAlign: 'left', marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555', fontSize: '14px' }}>Email Address</label>
                         <input 
                             type="email" 
-                            {...register('email')} 
-                            style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}
+                            name="email" 
+                            placeholder="name@example.com" 
+                            className="auth-input"
+                            value={formData.email} 
+                            onChange={handleChange} 
+                            required 
+                            style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '14px' }} 
                         />
-                        {errors.email && <span style={{ color: 'red', fontSize: '12px' }}>{errors.email.message}</span>}
                     </div>
 
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Password</label>
+                    <div style={{ textAlign: 'left', marginBottom: '30px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#555', fontSize: '14px' }}>Password</label>
                         <input 
                             type="password" 
-                            {...register('password')} 
-                            style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}
+                            name="password" 
+                            placeholder="********" 
+                            className="auth-input"
+                            value={formData.password} 
+                            onChange={handleChange} 
+                            required 
+                            style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '14px' }} 
                         />
-                        {errors.password && <span style={{ color: 'red', fontSize: '12px' }}>{errors.password.message}</span>}
                     </div>
 
                     <button 
                         type="submit" 
-                        disabled={isSubmitting}
-                        style={{ width: '100%', padding: '12px', background: 'var(--primary-orange, #f57224)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px' }}
+                        className="auth-btn"
+                        style={{ width: '100%', padding: '15px', background: 'var(--primary-orange, #f57224)', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}
                     >
-                        {isSubmitting ? 'Logging in...' : 'Login'}
+                        Login
                     </button>
                 </form>
 
-                <p className="text-center" style={{ marginTop: '20px', fontSize: '14px' }}>
-                    Don't have an account? <Link to="/register" style={{ color: 'var(--primary-orange, #f57224)', fontWeight: 'bold' }}>Register here</Link>
+                <p style={{ marginTop: '25px', color: '#777', fontSize: '14px' }}>
+                    Don't have an account? <Link to="/register" style={{ color: 'var(--primary-orange, #f57224)', textDecoration: 'none', fontWeight: 'bold' }}>Sign up</Link>
                 </p>
             </div>
-        </section>
+        </div>
     );
 };
 

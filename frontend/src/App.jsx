@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import Products from './pages/Products';
 import Register from './pages/Register';
 import Checkout from './pages/Checkout';
+import LoggedOut from './pages/LoggedOut';
 import Dashboard from './pages/Dashboard';
 import ProductDetails from './pages/ProductDetails';
 
@@ -42,6 +43,7 @@ function App() {
           <Route path="/products" element={<Products />} />
           <Route path="/register" element={<Register />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/logged-out" element={<LoggedOut />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/product/:id" element={<ProductDetails />} />
         </Routes>
