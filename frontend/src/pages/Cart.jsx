@@ -58,7 +58,7 @@ const Cart = () => {
                                             type="number"
                                             min="1"
                                             value={item.quantity}
-                                            onChange={(e) => updateQuantity(item._id, parseInt(e.target.value) || 1)}
+                                            onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value) || 1)}
                                             style={{ width: '60px', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', textAlign: 'center' }}
                                         />
                                     </td>
@@ -69,7 +69,7 @@ const Cart = () => {
 
                                     <td style={{ padding: '20px', textAlign: 'center' }}>
                                         <button
-                                            onClick={() => removeFromCart(item._id)}
+                                            onClick={() => removeFromCart(item.productId)}
                                             style={{ background: 'none', border: 'none', color: '#ff4d4f', cursor: 'pointer', fontSize: '18px' }}
                                             title="Remove Item"
                                         >

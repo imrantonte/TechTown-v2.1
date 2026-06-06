@@ -11,7 +11,7 @@ const Profile = () => {
 
     // Global Stores
     const { user, logout, checkAuth, isLoading } = useAuthStore();
-    const clearCart = useCartStore(state => state.clearCart);
+    const clearLocalCart = useCartStore(state => state.clearLocalCart);
 
     // Local State
     const [activeTab, setActiveTab] = useState('overview');
@@ -65,7 +65,7 @@ const Profile = () => {
     };
 
     const handleLogout = async () => {
-        clearCart();
+        clearLocalCart();
         await logout();
         navigate('/logged-out');
     };

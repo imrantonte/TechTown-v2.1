@@ -1,3 +1,4 @@
+import { useEffect } from 'react'; // <-- 1. IMPORT useEffect
 import { Link, useNavigate } from 'react-router-dom';
 import { FaSearch, FaShoppingCart, FaUser, FaSignOutAlt } from 'react-icons/fa';
 
@@ -8,10 +9,20 @@ import { useAuthStore } from '../store/authStore';
 const Navbar = () => {
     const navigate = useNavigate();
 
-    const cart = useCartStore(state => state.cart);
-    const cartCount = cart.reduce((total, item) => total + item.quantity, 0)
+    // 2. Destructure both cart AND fetchCart from the store
+    const { cart, fetchCart } = useCartStore();
+    
+    // Ensure cart exists before reducing to prevent crashes
+    const cartCount = cart?.reduce((total, item) => total + item.quantity, 0) || 0;
 
     const { user } = useAuthStore();
+
+    // 3. The exact second the user logs in, fetch their saved cart
+    useEffect(() => {
+        if (user) {
+            fetchCart();
+        }
+    }, [user, fetchCart]);
 
     return (
         <header>

@@ -87,7 +87,7 @@ const getMe = async (req, res) => {
         phone: req.user.phone,
         role: req.user.role
     };
-    
+
     res.status(200).json(user);
 };
 
@@ -97,17 +97,20 @@ const getMe = async (req, res) => {
 const applySeller = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
-        
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         if (user.sellerStatus === 'pending') {
             return res.status(400).json({ message: 'You already have a pending seller request.' });
         }
         if (user.role === 'seller' || user.role === 'admin') {
             return res.status(400).json({ message: 'You are already a seller or admin.' });
         }
-        
-        user.sellerStatus = 'pending';
-        await user.save();
-        
+
+        // FIX: Bypass pre-save hooks and update the document directly
+        await User.findByIdAndUpdate(req.user._id, { sellerStatus: 'pending' });
+
         res.status(200).json({ message: 'Seller application submitted successfully!' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -131,21 +134,25 @@ const getSellerRequests = async (req, res) => {
 // @access  Private/Admin
 const updateSellerStatus = async (req, res) => {
     try {
-        const { status } = req.body; // Expects 'approved' or 'rejected'
-        const user = await User.findById(req.params.id);
+        const { status } = req.body;
 
-        if (!user) {
+        // Prepare exactly what we want to change
+        const updatedData = { sellerStatus: status };
+        if (status === 'approved') {
+            updatedData.role = 'seller';
+        }
+
+        // FIX: Bypass pre-save hooks and update the document directly
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            updatedData,
+            { new: true } // Tells Mongoose to return the fresh data
+        );
+
+        if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        user.sellerStatus = status;
-        
-        // If approved, instantly upgrade their account role!
-        if (status === 'approved') {
-            user.role = 'seller';
-        }
-
-        const updatedUser = await user.save();
         res.status(200).json({ message: `Seller request ${status}`, user: updatedUser });
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -50,6 +50,9 @@ app.use('/api/orders', require('./routes/orderRoutes'));
 // AI Chat route (for interacting with the AI bot)
 app.use('/api/ai', require('./routes/aiRoutes'));
 
+// Cart routes (for managing the shopping cart)
+app.use('/api/cart', require('./routes/cartRoutes'));
+
 // --- SERVER STARTUP ---
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
