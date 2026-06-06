@@ -1242,3 +1242,31 @@ footer {
     background-color: #e0601b !important;
     transition: all 0.3s ease;
 }
+
+/* ==========================================================================
+   GLOBAL SELECT DROPDOWN FIX (Overriding default browser styles)
+   ========================================================================== */
+select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    
+    /* The !important tags prevent React inline styles from deleting the arrow */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    background-size: 16px !important;
+    
+    padding-right: 35px !important; 
+    cursor: pointer;
+}
+
+select::-ms-expand {
+    display: none;
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--primary-orange, #f57224) !important;
+    box-shadow: 0 0 0 2px rgba(245, 114, 36, 0.2);
+}

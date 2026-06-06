@@ -34,7 +34,7 @@ const getProductById = async (req, res) => {
 // @access  Private (Admin & Seller only)
 const createProduct = async (req, res) => {
     try {
-        const { name, category, price, stock, condition_type } = req.body;
+        const { name, category, price, stock, condition_type, description } = req.body;
 
         // If Multer successfully uploaded the file to Cloudinary, it attaches the URL to req.file.path
         const image = req.file ? req.file.path : 'no-image.jpg';
@@ -45,6 +45,7 @@ const createProduct = async (req, res) => {
             price,
             stock,
             condition_type,
+            description,
             image,
             sellerId: req.user._id // Automatically assigned from our Auth Middleware
         });
@@ -97,7 +98,7 @@ const getSellerProducts = async (req, res) => {
 // @access  Private (Admin & Seller only)
 const updateProduct = async (req, res) => {
     try {
-        const { name, category, price, stock, condition_type } = req.body;
+        const { name, category, price, stock, condition_type, description } = req.body;
         const product = await Product.findById(req.params.id);
 
         if (!product) {
@@ -115,6 +116,7 @@ const updateProduct = async (req, res) => {
         product.category = category || product.category;
         product.stock = stock || product.stock;
         product.condition_type = condition_type || product.condition_type;
+        product.description = description || product.description;
 
         // If Multer uploaded a NEW file, replace the old image URL
         if (req.file) {
