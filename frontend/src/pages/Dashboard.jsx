@@ -21,16 +21,18 @@ const Dashboard = () => {
     const [sellerRequests, setSellerRequests] = useState([]);
     const [isLoadingSellers, setIsLoadingSellers] = useState(false);
 
-    // --- NEW: PRODUCT FORM STATE ---
+    // --- PRODUCT FORM STATE ---
     const [showAddForm, setShowAddForm] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [editingId, setEditingId] = useState(null); // NEW: Tracks if we are editing an existing product
+    
     const [newProduct, setNewProduct] = useState({
         name: '',
         price: '',
         category: '',
         stock: '',
         condition_type: 'New',
-        image: null // This will hold the actual physical file!
+        image: null 
     });
 
     // SECURITY & DATA FETCHING
@@ -93,17 +95,44 @@ const Dashboard = () => {
         }
     };
 
-    // --- NEW: CLOUDINARY UPLOAD LOGIC ---
+    // --- FORM ACTIONS ---
     const handleImageChange = (e) => {
-        // Grab the physical file from the input
         setNewProduct({ ...newProduct, image: e.target.files[0] });
     };
 
-    const handleCreateProduct = async (e) => {
+    // NEW: Delete a product
+    const handleDeleteProduct = async (productId) => {
+        if (window.confirm("Are you sure you want to delete this device? This cannot be undone.")) {
+            try {
+                await axios.delete(`/api/products/${productId}`);
+                toast.success("Device deleted successfully");
+                fetchProducts(); // Refresh the table
+            } catch (error) {
+                toast.error(error.response?.data?.message || "Failed to delete device");
+            }
+        }
+    };
+
+    // NEW: Open the edit form and populate the data
+    const handleEditClick = (product) => {
+        setEditingId(product._id);
+        setNewProduct({
+            name: product.name,
+            price: product.price,
+            category: product.category,
+            stock: product.stock,
+            condition_type: product.condition_type || 'New',
+            image: null // Leave empty unless they explicitly select a new photo
+        });
+        setShowAddForm(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to the form
+    };
+
+    // UPGRADED: Handles both POST (Create) and PUT (Update)
+    const handleSubmitProduct = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        // We MUST use FormData instead of JSON to send files over HTTP
         const formData = new FormData();
         formData.append('name', newProduct.name);
         formData.append('price', newProduct.price);
@@ -115,17 +144,27 @@ const Dashboard = () => {
         }
 
         try {
-            // Send to backend. Axios will automatically set the correct Multipart headers
-            await axios.post('/api/products', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            if (editingId) {
+                // UPDATE
+                await axios.put(`/api/products/${editingId}`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success("Device updated successfully!");
+            } else {
+                // CREATE
+                await axios.post('/api/products', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success("Device added successfully!");
+            }
             
-            toast.success("Device added successfully!");
+            // Reset form
             setShowAddForm(false);
+            setEditingId(null);
             setNewProduct({ name: '', price: '', category: '', stock: '', condition_type: 'New', image: null });
-            fetchProducts(); // Refresh the table
+            fetchProducts(); 
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to add device");
+            toast.error(error.response?.data?.message || "Failed to save device");
         } finally {
             setIsSubmitting(false);
         }
@@ -215,17 +254,25 @@ const Dashboard = () => {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
                                 <h3 style={{ margin: 0, color: '#333' }}>Inventory Management</h3>
                                 <button 
-                                    onClick={() => setShowAddForm(!showAddForm)}
+                                    onClick={() => {
+                                        setShowAddForm(!showAddForm);
+                                        if (editingId) {
+                                            setEditingId(null);
+                                            setNewProduct({ name: '', price: '', category: '', stock: '', condition_type: 'New', image: null });
+                                        }
+                                    }}
                                     style={{ display: 'flex', alignItems: 'center', gap: '8px', background: showAddForm ? '#555' : 'var(--primary-orange, #f57224)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
                                     {showAddForm ? <><FaTimes /> Cancel</> : <><FaPlus /> Add New Device</>}
                                 </button>
                             </div>
 
-                            {/* ADD PRODUCT FORM */}
+                            {/* ADD/EDIT PRODUCT FORM */}
                             {showAddForm && (
                                 <div style={{ background: '#f9f9f9', padding: '25px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '30px' }}>
-                                    <h4 style={{ marginTop: 0, marginBottom: '20px' }}>Add a New Device</h4>
-                                    <form onSubmit={handleCreateProduct} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <h4 style={{ marginTop: 0, marginBottom: '20px' }}>
+                                        {editingId ? 'Edit Device' : 'Add a New Device'}
+                                    </h4>
+                                    <form onSubmit={handleSubmitProduct} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                         <div style={{ display: 'flex', gap: '15px' }}>
                                             <input type="text" placeholder="Device Name" required value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
                                             <input type="number" placeholder="Price (৳)" required value={newProduct.price} onChange={(e) => setNewProduct({...newProduct, price: e.target.value})} style={{ width: '150px', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
@@ -244,12 +291,10 @@ const Dashboard = () => {
                                                 <option value="New">New</option>
                                                 <option value="Used">Used</option>
                                             </select>
-                                            
-                                            {/* THE ACTUAL FILE INPUT */}
-                                            <input type="file" accept="image/*" onChange={handleImageChange} required style={{ flex: 1, padding: '8px', background: '#fff', border: '1px dashed #ccc', borderRadius: '4px', cursor: 'pointer' }} />
+                                            <input type="file" accept="image/*" onChange={handleImageChange} required={!editingId} style={{ flex: 1, padding: '8px', background: '#fff', border: '1px dashed #ccc', borderRadius: '4px', cursor: 'pointer' }} />
                                         </div>
                                         <button disabled={isSubmitting} type="submit" style={{ padding: '12px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: isSubmitting ? 'not-allowed' : 'pointer', marginTop: '10px' }}>
-                                            {isSubmitting ? 'Uploading to Cloudinary...' : 'Upload & List Device'}
+                                            {isSubmitting ? 'Processing...' : (editingId ? 'Update Device' : 'Upload & List Device')}
                                         </button>
                                     </form>
                                 </div>
@@ -283,8 +328,17 @@ const Dashboard = () => {
                                                 </span>
                                             </td>
                                             <td style={{ padding: '15px', textAlign: 'center' }}>
-                                                <button style={{ background: '#343a40', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', marginRight: '5px' }}>Edit</button>
-                                                <button style={{ background: '#dc3545', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Delete</button>
+                                                {/* THESE BUTTONS ARE NOW OFFICIALLY CONNECTED */}
+                                                <button 
+                                                    onClick={() => handleEditClick(product)}
+                                                    style={{ background: '#343a40', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', marginRight: '5px' }}>
+                                                    Edit
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDeleteProduct(product._id)}
+                                                    style={{ background: '#dc3545', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+                                                    Delete
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}

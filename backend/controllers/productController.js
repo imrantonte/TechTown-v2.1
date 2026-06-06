@@ -92,10 +92,47 @@ const getSellerProducts = async (req, res) => {
     }
 };
 
+// @desc    Update a product (with optional new image)
+// @route   PUT /api/products/:id
+// @access  Private (Admin & Seller only)
+const updateProduct = async (req, res) => {
+    try {
+        const { name, category, price, stock, condition_type } = req.body;
+        const product = await Product.findById(req.params.id);
+
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        // SECURITY: Ensure the user updating it is either an Admin OR the Seller who created it
+        if (product.sellerId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized to update this product' });
+        }
+
+        // Update fields if they exist in the request
+        product.name = name || product.name;
+        product.price = price || product.price;
+        product.category = category || product.category;
+        product.stock = stock || product.stock;
+        product.condition_type = condition_type || product.condition_type;
+
+        // If Multer uploaded a NEW file, replace the old image URL
+        if (req.file) {
+            product.image = req.file.path; 
+        }
+
+        const updatedProduct = await product.save();
+        res.status(200).json(updatedProduct);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getProducts,
     getProductById,
     createProduct,
     deleteProduct,
-    getSellerProducts
+    getSellerProducts,
+    updateProduct
 };

@@ -5,24 +5,24 @@ const {
     getProductById,
     createProduct,
     deleteProduct,
-    getSellerProducts 
+    getSellerProducts,
+    updateProduct
 } = require('../controllers/productController');
 
 const { protect, adminOrSeller } = require('../middlewares/authMiddleware'); 
-
-// 1. IMPORT YOUR CLOUDINARY MULTER CONFIG
 const upload = require('../config/upload'); 
 
-// --- PUBLIC ROUTES (Anyone can view products) ---
 router.get('/', getProducts);
 router.get('/:id', getProductById);
-
-// --- MULTI-VENDOR ROUTES (Admins AND Sellers) ---
 router.get('/seller/myproducts', protect, adminOrSeller, getSellerProducts); 
 
-// 2. INJECT 'upload.single' SO EXPRESS READS THE ACTUAL FILE BEFORE CREATING THE PRODUCT
+// Create product (with image upload)
 router.post('/', protect, adminOrSeller, upload.single('image'), createProduct);
 
+// Update product (with optional image upload)
+router.put('/:id', protect, adminOrSeller, upload.single('image'), updateProduct); // <-- 2. Add the route!
+
+// Delete product
 router.delete('/:id', protect, adminOrSeller, deleteProduct);
 
 module.exports = router;
