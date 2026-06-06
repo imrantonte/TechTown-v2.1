@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useProductStore } from '../store/productStore';
-import { FaTachometerAlt, FaBoxOpen, FaClipboardList, FaUsers, FaPlus } from 'react-icons/fa';
+import { FaTachometerAlt, FaBoxOpen, FaClipboardList, FaUsers, FaPlus, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
@@ -15,13 +15,23 @@ const Dashboard = () => {
     // LOCAL STATE
     const [activeTab, setActiveTab] = useState('overview');
 
-    // State to hold all system orders
+    // Orders & Sellers State
     const [allOrders, setAllOrders] = useState([]);
     const [isLoadingOrders, setIsLoadingOrders] = useState(false);
-
-    // State for Seller Requests
     const [sellerRequests, setSellerRequests] = useState([]);
     const [isLoadingSellers, setIsLoadingSellers] = useState(false);
+
+    // --- NEW: PRODUCT FORM STATE ---
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [newProduct, setNewProduct] = useState({
+        name: '',
+        price: '',
+        category: '',
+        stock: '',
+        condition_type: 'New',
+        image: null // This will hold the actual physical file!
+    });
 
     // SECURITY & DATA FETCHING
     useEffect(() => {
@@ -38,62 +48,92 @@ const Dashboard = () => {
         }
     }, [user, isLoading, navigate, fetchProducts]);
 
-    // Fetch all pending seller requests
     const fetchSellerRequests = async () => {
         setIsLoadingSellers(true);
         try {
             const res = await axios.get('/api/auth/seller-requests');
             setSellerRequests(res.data);
         } catch (error) {
-            console.error("Could not fetch seller requests:", error);
+            console.error("Could not fetch seller requests");
         } finally {
             setIsLoadingSellers(false);
         }
     };
 
-    // Approve or Reject a seller
     const handleSellerAction = async (userId, status) => {
         try {
             await axios.put(`/api/auth/${userId}/seller-status`, { status });
             toast.success(`Seller application ${status}`);
-            fetchSellerRequests(); // Refresh the list
+            fetchSellerRequests(); 
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to update status");
         }
     };
 
-    // Fetch all orders for the Admin/Seller
     const fetchAllOrders = async () => {
         setIsLoadingOrders(true);
         try {
-            // Assuming standard REST pattern. We will build this backend route if it fails!
             const res = await axios.get('/api/orders');
-            // Sort by newest first
             const sortedOrders = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             setAllOrders(sortedOrders);
         } catch (error) {
-            console.error("Could not fetch all orders:", error);
-            // We don't toast error here yet, in case the backend route doesn't exist.
+            console.error("Could not fetch orders");
         } finally {
             setIsLoadingOrders(false);
         }
     };
 
-    // Function to change order status
     const handleStatusChange = async (orderId, newStatus) => {
         try {
             await axios.put(`/api/orders/${orderId}/status`, { status: newStatus });
             toast.success(`Order marked as ${newStatus}`);
-            fetchAllOrders(); // Refresh the list to show the new status
+            fetchAllOrders(); 
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to update status");
+            toast.error("Failed to update status");
+        }
+    };
+
+    // --- NEW: CLOUDINARY UPLOAD LOGIC ---
+    const handleImageChange = (e) => {
+        // Grab the physical file from the input
+        setNewProduct({ ...newProduct, image: e.target.files[0] });
+    };
+
+    const handleCreateProduct = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        // We MUST use FormData instead of JSON to send files over HTTP
+        const formData = new FormData();
+        formData.append('name', newProduct.name);
+        formData.append('price', newProduct.price);
+        formData.append('category', newProduct.category);
+        formData.append('stock', newProduct.stock);
+        formData.append('condition_type', newProduct.condition_type);
+        if (newProduct.image) {
+            formData.append('image', newProduct.image);
+        }
+
+        try {
+            // Send to backend. Axios will automatically set the correct Multipart headers
+            await axios.post('/api/products', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            toast.success("Device added successfully!");
+            setShowAddForm(false);
+            setNewProduct({ name: '', price: '', category: '', stock: '', condition_type: 'New', image: null });
+            fetchProducts(); // Refresh the table
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to add device");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     if (isLoading) return <div style={{ textAlign: 'center', marginTop: '100px', fontSize: '18px', color: '#555' }}>Loading dashboard...</div>;
     if (!user || user.role === 'user') return null;
 
-    // Calculate real dynamic numbers for the Overview tab
     const pendingOrdersCount = allOrders.filter(order => order.status === 'Pending').length;
 
     return (
@@ -162,7 +202,6 @@ const Dashboard = () => {
                                     <p style={{ color: '#555', margin: 0, fontSize: '16px' }}>Total Devices Listed</p>
                                 </div>
                                 <div style={{ background: '#fcfcfc', padding: '30px', borderRadius: '8px', textAlign: 'center', border: '1px solid #eee' }}>
-                                    {/* FIX: Now displays the REAL pending orders count */}
                                     <p style={{ fontSize: '42px', fontWeight: 'bold', margin: '0 0 10px 0', color: pendingOrdersCount > 0 ? '#dc3545' : '#17a2b8' }}>{pendingOrdersCount}</p>
                                     <p style={{ color: '#555', margin: 0, fontSize: '16px' }}>Pending Orders</p>
                                 </div>
@@ -170,15 +209,52 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    {/* --- TAB: PRODUCTS (Unchanged for now) --- */}
+                    {/* --- TAB: PRODUCTS --- */}
                     {activeTab === 'products' && (
                         <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
                                 <h3 style={{ margin: 0, color: '#333' }}>Inventory Management</h3>
-                                <button style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--primary-orange, #f57224)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                                    <FaPlus /> Add New Device
+                                <button 
+                                    onClick={() => setShowAddForm(!showAddForm)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', background: showAddForm ? '#555' : 'var(--primary-orange, #f57224)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                    {showAddForm ? <><FaTimes /> Cancel</> : <><FaPlus /> Add New Device</>}
                                 </button>
                             </div>
+
+                            {/* ADD PRODUCT FORM */}
+                            {showAddForm && (
+                                <div style={{ background: '#f9f9f9', padding: '25px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '30px' }}>
+                                    <h4 style={{ marginTop: 0, marginBottom: '20px' }}>Add a New Device</h4>
+                                    <form onSubmit={handleCreateProduct} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                        <div style={{ display: 'flex', gap: '15px' }}>
+                                            <input type="text" placeholder="Device Name" required value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})} style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                                            <input type="number" placeholder="Price (৳)" required value={newProduct.price} onChange={(e) => setNewProduct({...newProduct, price: e.target.value})} style={{ width: '150px', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '15px' }}>
+                                            <select required value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})} style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}>
+                                                <option value="" disabled>Select Category</option>
+                                                <option value="Phones">Phones</option>
+                                                <option value="Laptops">Laptops</option>
+                                                <option value="Accessories">Accessories</option>
+                                            </select>
+                                            <input type="number" placeholder="Stock Qty" required value={newProduct.stock} onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})} style={{ width: '150px', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                            <select value={newProduct.condition_type} onChange={(e) => setNewProduct({...newProduct, condition_type: e.target.value})} style={{ width: '150px', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}>
+                                                <option value="New">New</option>
+                                                <option value="Used">Used</option>
+                                            </select>
+                                            
+                                            {/* THE ACTUAL FILE INPUT */}
+                                            <input type="file" accept="image/*" onChange={handleImageChange} required style={{ flex: 1, padding: '8px', background: '#fff', border: '1px dashed #ccc', borderRadius: '4px', cursor: 'pointer' }} />
+                                        </div>
+                                        <button disabled={isSubmitting} type="submit" style={{ padding: '12px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: isSubmitting ? 'not-allowed' : 'pointer', marginTop: '10px' }}>
+                                            {isSubmitting ? 'Uploading to Cloudinary...' : 'Upload & List Device'}
+                                        </button>
+                                    </form>
+                                </div>
+                            )}
+
                             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                                 <thead>
                                     <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #eee' }}>
@@ -217,7 +293,7 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    {/* --- TAB: ORDERS (NEW REAL DATA) --- */}
+                    {/* --- TAB: ORDERS --- */}
                     {activeTab === 'orders' && (
                         <div>
                             <h3 style={{ marginBottom: '25px', color: '#333' }}>Order Management</h3>
@@ -243,7 +319,7 @@ const Dashboard = () => {
                                             <tr key={order._id} style={{ borderBottom: '1px solid #eee' }}>
                                                 <td style={{ padding: '15px 10px', fontWeight: 'bold' }}>#{order._id.substring(0, 6).toUpperCase()}</td>
                                                 <td style={{ padding: '15px 10px', color: '#777' }}>{new Date(order.createdAt).toLocaleDateString()}</td>
-                                                <td style={{ padding: '15px 10px', color: '#333' }}>{order.userId?.name || 'Guest'}</td>                                                <td style={{ padding: '15px 10px', fontWeight: 'bold' }}>৳ {order.total_amount?.toLocaleString()}</td>
+                                                <td style={{ padding: '15px 10px', color: '#333' }}>{order.userId?.name || 'Guest'}</td>                                               <td style={{ padding: '15px 10px', fontWeight: 'bold' }}>৳ {order.total_amount?.toLocaleString()}</td>
                                                 <td style={{ padding: '15px 10px' }}>
                                                     <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', background: order.status === 'Delivered' ? '#d4edda' : (order.status === 'Pending' ? '#fff3cd' : '#e2e3e5'), color: order.status === 'Delivered' ? '#155724' : (order.status === 'Pending' ? '#856404' : '#383d41') }}>
                                                         {order.status}
