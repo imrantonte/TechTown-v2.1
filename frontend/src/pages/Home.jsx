@@ -15,11 +15,11 @@ const Home = () => {
     const watches = products.filter(p => p.category === 'Smart Watches').slice(0, 5);
 
     const categories = [
-        { name: 'Phones', icon: <FaMobileAlt size={18} />, link: '/shop?category=Smartphones' },
-        { name: 'Laptops', icon: <FaLaptop size={18} />, link: '/shop?category=Laptops' },
-        { name: 'Cameras', icon: <FaCamera size={18} />, link: '/shop?category=Cameras' },
-        { name: 'Watches', icon: <FaStopwatch size={18} />, link: '/shop?category=Smart Watches' },
-        { name: 'Accessories', icon: <FaHeadphones size={18} />, link: '/shop?category=Accessories' }
+        { name: 'Phones', icon: <FaMobileAlt size={18} />, link: '/products?category=Smartphones' },
+        { name: 'Laptops', icon: <FaLaptop size={18} />, link: '/products?category=Laptops' },
+        { name: 'Cameras', icon: <FaCamera size={18} />, link: '/products?category=Cameras' },
+        { name: 'Watches', icon: <FaStopwatch size={18} />, link: '/products?category=Smart Watches' },
+        { name: 'Accessories', icon: <FaHeadphones size={18} />, link: '/products?category=Accessories' }
     ];
 
     return (
@@ -82,7 +82,7 @@ const Home = () => {
                         </p>
                         
                         <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <Link to="/shop" style={{ 
+                            <Link to="/products" style={{ 
                                 background: 'var(--primary-orange, #f57224)', 
                                 color: '#fff', 
                                 padding: '16px 36px', 
@@ -175,7 +175,7 @@ const Section = ({ title, category, products, isLoading }) => (
     <div style={{ marginBottom: '60px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px' }}>
             <h2 style={{ fontSize: '22px', margin: 0, fontWeight: 'bold', color: '#222' }}>{title}</h2>
-            <Link to={`/shop?category=${category}`} style={{ color: 'var(--primary-orange, #f57224)', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold', transition: '0.2s' }}>
+            <Link to={`/products?category=${category}`} style={{ color: 'var(--primary-orange, #f57224)', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold', transition: '0.2s' }}>
                 View all
             </Link>
         </div>
