@@ -70,9 +70,8 @@ const Products = () => {
         const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
         const matchesMinPrice = appliedMinPrice === null || product.price >= appliedMinPrice;
         const matchesMaxPrice = appliedMaxPrice === null || product.price <= appliedMaxPrice;
-        const productCondition = product.condition || 'New';
+        const productCondition = product.condition_type || 'New'; 
         const matchesCondition = selectedConditions.length === 0 || selectedConditions.includes(productCondition);
-
         return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice && matchesCondition;
     });
 
@@ -170,18 +169,7 @@ const Products = () => {
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '25px' }}>
-                        <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px', marginBottom: '10px' }}>Price Range (৳)</h4>
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                            <input type="number" placeholder="Min" value={minPriceInput} onChange={(e) => setMinPriceInput(e.target.value)} style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }} />
-                            <input type="number" placeholder="Max" value={maxPriceInput} onChange={(e) => setMaxPriceInput(e.target.value)} style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }} />
-                        </div>
-                        <button onClick={handleApplyPrice} style={{ width: '100%', padding: '8px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontWeight: 'bold', color: '#333', fontSize: '13px', cursor: 'pointer', transition: '0.2s' }} onMouseEnter={(e) => e.currentTarget.style.borderColor = '#cbd5e1'} onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
-                            Apply Range
-                        </button>
-                    </div>
-
-                    <div>
+                    <div style={{ marginTop: '25px' }}>
                         <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px', marginBottom: '10px' }}>Condition</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {conditionOptions.map(cond => (
@@ -196,6 +184,17 @@ const Products = () => {
                                 </label>
                             ))}
                         </div>
+                    </div>
+
+                    <div style={{ marginTop: '25px' }}>
+                        <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px', marginBottom: '10px' }}>Price Range (৳)</h4>
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                            <input type="number" placeholder="Min" value={minPriceInput} onChange={(e) => setMinPriceInput(e.target.value)} style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }} />
+                            <input type="number" placeholder="Max" value={maxPriceInput} onChange={(e) => setMaxPriceInput(e.target.value)} style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none' }} />
+                        </div>
+                        <button onClick={handleApplyPrice} style={{ width: '100%', padding: '8px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontWeight: 'bold', color: '#333', fontSize: '13px', cursor: 'pointer', transition: '0.2s' }} onMouseEnter={(e) => e.currentTarget.style.borderColor = '#cbd5e1'} onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
+                            Apply Range
+                        </button>
                     </div>
                 </div>
 
