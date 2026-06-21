@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useProductStore } from '../store/productStore';
-import { FaMobileAlt, FaLaptop, FaCamera, FaStopwatch, FaHeadphones, FaArrowRight, FaShieldAlt, FaTruck } from 'react-icons/fa';
+import { FaMobileAlt, FaLaptop, FaCamera, FaStopwatch, FaHeadphones, FaArrowRight, FaShieldAlt, FaTruck, FaTabletAlt, FaDesktop } from 'react-icons/fa';
 
 const Home = () => {
     const { products, fetchProducts, isLoading } = useProductStore();
