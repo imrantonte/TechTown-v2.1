@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // Layout Components
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Page Components
 import Home from './pages/Home';
@@ -36,16 +37,31 @@ function App() {
 
       <main style={{ minHeight: '80vh' }}>
         <Routes>
+          {/* Public Routes - Anyone can access */}
           <Route path="/" element={<Home />} />
-          <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/profile" element={<Profile />} />
           <Route path="/products" element={<Products />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/checkout" element={<Checkout />} />
           <Route path="/logged-out" element={<LoggedOut />} />
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/product/:id" element={<ProductDetails />} />
+
+          {/* Protected Routes - Must be logged in */}
+          <Route path="/cart" element={
+            <ProtectedRoute><Cart /></ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute><Profile /></ProtectedRoute>
+          } />
+          <Route path="/checkout" element={
+            <ProtectedRoute><Checkout /></ProtectedRoute>
+          } />
+
+          {/* Admin/Seller Only Route */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute allowedRoles={['admin', 'seller']}>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
         </Routes>
       </main>
 

@@ -177,7 +177,10 @@ const Dashboard = () => {
     };
 
     if (isLoading) return <div style={{ textAlign: 'center', marginTop: '100px', fontSize: '18px', color: '#555' }}>Loading dashboard...</div>;
-    if (!user || user.role === 'user') return null;
+    if (!user || user.role === 'customer') {
+        navigate('/');
+        return null;
+    }
 
     const pendingOrdersCount = allOrders.filter(order => order.status === 'Pending').length;
 
