@@ -428,8 +428,6 @@ const Dashboard = () => {
                                         <option value="" disabled>Select Category</option>
                                         <option value="Smartphones">Smartphones</option>
                                         <option value="Laptops">Laptops</option>
-                                        <option value="Tablets">Tablets</option>
-                                        <option value="Monitors">Monitors</option>
                                         <option value="Cameras">Cameras</option>
                                         <option value="Smart Watches">Smart Watches</option>
                                         <option value="Accessories">Accessories</option>
