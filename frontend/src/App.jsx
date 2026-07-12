@@ -19,6 +19,7 @@ import Checkout from './pages/Checkout';
 import LoggedOut from './pages/LoggedOut';
 import Dashboard from './pages/Dashboard';
 import ProductDetails from './pages/ProductDetails';
+import ChatBot from './components/ChatBot';
 
 // Global Store
 import { useAuthStore } from './store/authStore';
@@ -66,6 +67,7 @@ function App() {
       </main>
 
       <Footer />
+      <ChatBot />
     </>
   );
 }
