@@ -5,6 +5,7 @@ node_modules/
 .env
 .env.*
 !.env.example
+!frontend/.env.production
 
 # OS generated files
 .DS_Store
