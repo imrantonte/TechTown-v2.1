@@ -28,12 +28,18 @@ const importData = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('MongoDB connected for Seeding...');
 
-        // 1. Find the Admin user you just created in the database
-        const adminUser = await User.findOne({ role: 'admin' });
+        // 1. Find or create the Admin user
+        let adminUser = await User.findOne({ role: 'admin' });
 
         if (!adminUser) {
-            console.error('❌ Error: No admin user found. Ensure your account is set to "admin" in Compass.');
-            process.exit(1);
+            console.log('⚠️ No admin user found. Creating a default admin user...');
+            adminUser = await User.create({
+                name: 'Default Admin',
+                email: 'admin@techtown.com',
+                password: 'adminpassword123',
+                role: 'admin'
+            });
+            console.log('✅ Default admin user created (admin@techtown.com / adminpassword123)');
         }
 
         // 2. Clear existing products to prevent duplicates
