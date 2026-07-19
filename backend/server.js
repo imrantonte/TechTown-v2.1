@@ -10,6 +10,9 @@ const connectDB = require('./config/db.js');
 // Initialize Express
 const app = express();
 
+// Trust proxy for express-rate-limit behind Render/Vercel reverse proxies
+app.set('trust proxy', 1);
+
 // Connect to MongoDB
 connectDB();
 
