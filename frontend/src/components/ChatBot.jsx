@@ -438,8 +438,8 @@ const ChatBot = () => {
             `}</style>
 
             {/* Chat Launcher Button */}
-            <div 
-                className="chatbot-launcher" 
+            <div
+                className="chatbot-launcher"
                 onClick={() => setIsOpen(!isOpen)}
                 title="Chat with AI Assistant"
             >
@@ -455,23 +455,23 @@ const ChatBot = () => {
                             <FaRobot />
                         </div>
                         <div className="chatbot-header-text">
-                            <h4>TechTown AI</h4>
+                            <h4>Apple Vai AI</h4>
                             <span>AI Assistant</span>
                         </div>
                     </div>
                     <div className="chatbot-header-actions">
                         {user && (
-                            <button 
-                                className="chatbot-action-btn" 
-                                onClick={clearChat} 
+                            <button
+                                className="chatbot-action-btn"
+                                onClick={clearChat}
                                 title="Clear conversation"
                             >
                                 <FaTrash style={{ fontSize: '14px' }} />
                             </button>
                         )}
-                        <button 
-                            className="chatbot-action-btn" 
-                            onClick={() => setIsOpen(false)} 
+                        <button
+                            className="chatbot-action-btn"
+                            onClick={() => setIsOpen(false)}
                             title="Close chat"
                         >
                             <FaTimes style={{ fontSize: '18px' }} />
@@ -489,7 +489,7 @@ const ChatBot = () => {
                         <div className="chatbot-guest-desc">
                             Please log in to chat with our AI Customer Support Bot. Get instant help with product availability, return policies, and order tracking.
                         </div>
-                        <button 
+                        <button
                             className="chatbot-login-btn"
                             onClick={() => {
                                 setIsOpen(false);
@@ -504,8 +504,8 @@ const ChatBot = () => {
                         {/* Messages Area */}
                         <div className="chatbot-body">
                             {messages.map((msg, index) => (
-                                <div 
-                                    key={index} 
+                                <div
+                                    key={index}
                                     className={`chatbot-message ${msg.role} ${msg.isError ? 'error' : ''}`}
                                     style={{ whiteSpace: 'pre-line' }}
                                 >
@@ -536,8 +536,8 @@ const ChatBot = () => {
                                     disabled={isLoading}
                                     maxLength={1000}
                                 />
-                                <button 
-                                    type="submit" 
+                                <button
+                                    type="submit"
                                     className="chatbot-submit-btn"
                                     disabled={!input.trim() || isLoading}
                                 >
