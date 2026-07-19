@@ -8,7 +8,7 @@ const generateTokenAndSetCookie = (res, userId) => {
     res.cookie('jwt', token, {
         httpOnly: true, // Prevents XSS attacks (JavaScript cannot read this cookie)
         secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
-        sameSite: 'strict', // Prevents CSRF attacks
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict', // Allows cross-site cookie in production
         maxAge: 10 * 365 * 24 * 60 * 60 * 1000 // Lasts 10 years (effectively infinite)
     });
 };
