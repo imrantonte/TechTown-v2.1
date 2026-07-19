@@ -70,7 +70,7 @@ const ChatBot = () => {
 
     const clearChat = () => {
         setMessages([
-            { role: 'model', text: 'Hello! I am your Apple vai Ai. Ask me anything about our products, stores, or policies!' }
+            { role: 'model', text: 'Hello! I am your joypurhut  Ai. Ask me anything about our products, stores, or policies!' }
         ]);
         setErrorMsg('');
     };
