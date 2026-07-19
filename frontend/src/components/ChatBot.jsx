@@ -455,7 +455,7 @@ const ChatBot = () => {
                             <FaRobot />
                         </div>
                         <div className="chatbot-header-text">
-                            <h4>Apple Vai AI</h4>
+                            <h4>Apple AI</h4>
                             <span>AI Assistant</span>
                         </div>
                     </div>
