@@ -9,7 +9,7 @@ const ChatBot = () => {
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { role: 'model', text: 'Hello! I am your Apple Vai Ai. Ask me anything about our products, stores, or policies!' }
+        { role: 'model', text: 'Hello! I am your joypurhat Vai Ai. Ask me anything about our products, stores, or policies!' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
