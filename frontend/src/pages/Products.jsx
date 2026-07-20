@@ -84,8 +84,11 @@ const Products = () => {
         const matchesMaxPrice = appliedMaxPrice === null || product.price <= appliedMaxPrice;
         const productCondition = product.condition_type || 'New';
         const matchesCondition = selectedConditions.length === 0 || selectedConditions.includes(productCondition);
-        const matchesBrand = selectedBrands.length === 0 || selectedBrands.some(brand =>
-            product.name.toLowerCase().includes(brand.toLowerCase())
+        const matchesBrand = selectedBrands.length === 0 || (
+            product.category === 'Smartphones' &&
+            selectedBrands.some(brand =>
+                product.name.toLowerCase().includes(brand.toLowerCase())
+            )
         );
         return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice && matchesCondition && matchesBrand;
     });
