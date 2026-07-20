@@ -23,6 +23,7 @@ const Products = () => {
     const [appliedMaxPrice, setAppliedMaxPrice] = useState(null);
 
     const [selectedConditions, setSelectedConditions] = useState([]);
+    const [selectedBrands, setSelectedBrands] = useState([]);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
     useEffect(() => {
@@ -56,6 +57,14 @@ const Products = () => {
         );
     };
 
+    const handleBrandToggle = (brand) => {
+        setSelectedBrands(prev =>
+            prev.includes(brand)
+                ? prev.filter(b => b !== brand)
+                : [...prev, brand]
+        );
+    };
+
     const clearFilters = () => {
         setSelectedCategory('All');
         setMinPriceInput('');
@@ -63,16 +72,22 @@ const Products = () => {
         setAppliedMinPrice(null);
         setAppliedMaxPrice(null);
         setSelectedConditions([]);
+        setSelectedBrands([]);
     };
+
+    const mobileBrands = ['Samsung', 'Apple', 'OnePlus', 'Xiaomi'];
 
     let filteredProducts = products.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(globalSearchQuery.toLowerCase());
         const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
         const matchesMinPrice = appliedMinPrice === null || product.price >= appliedMinPrice;
         const matchesMaxPrice = appliedMaxPrice === null || product.price <= appliedMaxPrice;
-        const productCondition = product.condition_type || 'New'; 
+        const productCondition = product.condition_type || 'New';
         const matchesCondition = selectedConditions.length === 0 || selectedConditions.includes(productCondition);
-        return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice && matchesCondition;
+        const matchesBrand = selectedBrands.length === 0 || selectedBrands.some(brand =>
+            product.name.toLowerCase().includes(brand.toLowerCase())
+        );
+        return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice && matchesCondition && matchesBrand;
     });
 
     // =========================================================
@@ -167,6 +182,23 @@ const Products = () => {
                                 >
                                     {cat}
                                 </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div style={{ marginTop: '25px' }}>
+                        <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: '#888', fontWeight: 'bold', letterSpacing: '0.5px', marginBottom: '10px' }}>Mobile Brands</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {mobileBrands.map(brand => (
+                                <label key={brand} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#444', cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedBrands.includes(brand)}
+                                        onChange={() => handleBrandToggle(brand)}
+                                        style={{ width: '14px', height: '14px', cursor: 'pointer', accentColor: 'var(--primary-orange, #f57224)' }}
+                                    />
+                                    {brand}
+                                </label>
                             ))}
                         </div>
                     </div>
