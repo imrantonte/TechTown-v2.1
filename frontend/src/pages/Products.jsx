@@ -75,7 +75,7 @@ const Products = () => {
         setSelectedBrands([]);
     };
 
-    const mobileBrands = ['Samsung', 'Apple', 'OnePlus', 'Xiaomi'];
+    const mobileBrands = ['Samsung', 'iPhone', 'OnePlus', 'Xiaomi'];
 
     let filteredProducts = products.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(globalSearchQuery.toLowerCase());
